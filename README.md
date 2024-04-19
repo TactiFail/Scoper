@@ -357,4 +357,28 @@ $ ./scoper.py test/targets.txt -v
 [!] Skipping unresolvable target 'asdf'
 [!] Skipping unresolvable target 'asdffsad.fdsafasdfasffffqeqewfqwefqwef.com'
 ```
+
+#### Interactive Mode
+
+*Interactive Mode* is a new feature as of v.1.1.0
+
+By passing in the `-i` or `--interactive` flags, you can enter a loop where you provide a single target at a time. History is stored so you can press up or down to quickly navigate through previous entries, for example to increment the last octet quickly or fix a typo. You can type `exit`, `quit`, or press `ctrl + c` to leave.
+
+```
+$ ./scoper.py -i
+ _____ _____ _____ _____ _____ _____
+|   __|     |     |  _  |   __| __  |
+|__   |   --|  +  |   __|   __|    -|
+|_____|_____|_____|__|  |_____|__|__| v1.1.0 by @TactiFail
+
+Enter targets, one at a time
+[>] 10.1.1.10
+[+] The target 10.1.1.10 is in scope
+[>] google.com
+[-] The target 142.250.191.142 (google.com) is out of scope.
+[>] 10.1.3.20
+[X] The target 10.1.3.20 is explicitly excluded from the scope
+[>] exit
+Exiting...
+```
 </details>
