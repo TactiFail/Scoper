@@ -35,7 +35,7 @@ $ ./scoper.py -sf test/scope.txt -ef test/exclude.txt test/targets.txt
  _____ _____ _____ _____ _____ _____
 |   __|     |     |  _  |   __| __  |
 |__   |   --|  +  |   __|   __|    -|
-|_____|_____|_____|__|  |_____|__|__| v1.0.0 by @TactiFail
+|_____|_____|_____|__|  |_____|__|__| v1.1.0 by @TactiFail
 
 [+] The target 10.1.1.10 is in scope
 [!] The target 10.1.1.100 is explicitly excluded from the scope
@@ -170,7 +170,7 @@ Scope and exclusion file entries can be one of:
 
 ```
 $ ./scoper.py -h
-usage: scoper.py [-h] [-sf SCOPE_FILE] [-ef EXCLUDE_FILE] [-v] [-fw | -g | -li | -le | -lo | -ln] target
+usage: scoper.py [-h] [-sf SCOPE_FILE] [-ef EXCLUDE_FILE] [-i] [-v] [-fw | -g | -li | -le | -lo | -ln] [target]
 
 Check whether target machines are in scope. Optionally generate iptables rules if not.
 
@@ -183,6 +183,7 @@ options:
                         file containing a list of in-scope IP addresses or ranges
   -ef EXCLUDE_FILE, --exclude-file EXCLUDE_FILE
                         file containing a list of excluded IP addresses or ranges
+  -i, --interactive     interactive mode
   -v, --verbose         verbose output
 
 output:
@@ -240,9 +241,7 @@ $ ./scoper.py 10.1.1.100
  _____ _____ _____ _____ _____ _____
 |   __|     |     |  _  |   __| __  |
 |__   |   --|  +  |   __|   __|    -|
-|_____|_____|_____|__|  |_____|__|__| v1.0.0 by @TactiFail
-
-[!] Warning: Exclude file not found - will not check for exclusions
+|_____|_____|_____|__|  |_____|__|__| v1.1.0 by @TactiFail
 
 [+] The target 10.1.1.100 is in scope
 ```
@@ -258,9 +257,9 @@ $ ./scoper.py 10.1.1.100
  _____ _____ _____ _____ _____ _____
 |   __|     |     |  _  |   __| __  |
 |__   |   --|  +  |   __|   __|    -|
-|_____|_____|_____|__|  |_____|__|__| v1.0.0 by @TactiFail
+|_____|_____|_____|__|  |_____|__|__| v1.1.0 by @TactiFail
 
-[!] The target 10.1.1.100 is explicitly excluded from the scope
+[X] The target 10.1.1.100 is explicitly excluded from the scope
 ```
 
 #### Target List File
@@ -270,16 +269,16 @@ $ ./scoper.py test/targets.txt
  _____ _____ _____ _____ _____ _____
 |   __|     |     |  _  |   __| __  |
 |__   |   --|  +  |   __|   __|    -|
-|_____|_____|_____|__|  |_____|__|__| v1.0.0 by @TactiFail
+|_____|_____|_____|__|  |_____|__|__| v1.1.0 by @TactiFail
 
 [+] The target 10.1.1.10 is in scope
-[!] The target 10.1.1.100 is explicitly excluded from the scope
+[X] The target 10.1.1.100 is explicitly excluded from the scope
 [+] The target 10.1.2.100 is in scope
-[!] The target 10.1.3.100 is explicitly excluded from the scope
+[X] The target 10.1.3.100 is explicitly excluded from the scope
 [+] The target 10.1.4.100 is in scope
 [+] The target 10.1.5.100 is in scope
 [+] The target 10.1.6.250 is in scope
-[-] The target 142.250.191.174 (google.com) is out of scope.
+[-] The target 172.217.1.110 (google.com) is out of scope.
 ```
 
 #### Greppable Output
@@ -312,16 +311,16 @@ $ ./scoper.py test/targets.txt -v
  _____ _____ _____ _____ _____ _____
 |   __|     |     |  _  |   __| __  |
 |__   |   --|  +  |   __|   __|    -|
-|_____|_____|_____|__|  |_____|__|__| v1.0.0 by @TactiFail
+|_____|_____|_____|__|  |_____|__|__| v1.1.0 by @TactiFail
 
 [+] The target 10.1.1.10 is in scope, matching line: 10.1.1.0/24
-[!] The target 10.1.1.100 is explicitly excluded from the scope, matching line: 10.1.1.100
+[X] The target 10.1.1.100 is explicitly excluded from the scope, matching line: 10.1.1.100
 [+] The target 10.1.2.100 is in scope, matching line: 10.1.2.0/24
-[!] The target 10.1.3.100 is explicitly excluded from the scope, matching line: 10.1.3.0/24
+[X] The target 10.1.3.100 is explicitly excluded from the scope, matching line: 10.1.3.0/24
 [+] The target 10.1.4.100 is in scope, matching line: 10.1.4.0/24
 [+] The target 10.1.5.100 is in scope, matching line: 10.1.5.1-150
 [+] The target 10.1.6.250 is in scope, matching line: 10.1.6.250
-[-] The target 142.250.191.174 (google.com) is out of scope.
+[-] The target 172.217.1.110 (google.com) is out of scope.
 ```
 
 #### Invalid Targets
@@ -340,41 +339,22 @@ google.com
 asdf
 asdffsad.fdsafasdfasffffqeqewfqwefqwef.com
 
-$ ./scoper.py test/targets.txt
+$ ./scoper.py test/targets.txt -v
  _____ _____ _____ _____ _____ _____
 |   __|     |     |  _  |   __| __  |
 |__   |   --|  +  |   __|   __|    -|
-|_____|_____|_____|__|  |_____|__|__| v1.0.0 by @TactiFail
+|_____|_____|_____|__|  |_____|__|__| v1.1.0 by @TactiFail
 
-[!] Invalid target 1.1.1.1.1
-[!] Invalid target asdf
-[!] Could not resolve asdffsad.fdsafasdfasffffqeqewfqwefqwef.com
-[+] The target 10.1.1.10 is in scope
-[!] The target 10.1.1.100 is explicitly excluded from the scope
-[+] The target 10.1.2.100 is in scope
-[!] The target 10.1.3.100 is explicitly excluded from the scope
-[+] The target 10.1.4.100 is in scope
-[+] The target 10.1.5.100 is in scope
-[+] The target 10.1.6.250 is in scope
-[-] The target 142.250.190.46 (google.com) is out of scope.
-```
-
-#### Errors to `/dev/null`
-
-```
-$ ./scoper.py test/targets.txt 2>/dev/null
- _____ _____ _____ _____ _____ _____
-|   __|     |     |  _  |   __| __  |
-|__   |   --|  +  |   __|   __|    -|
-|_____|_____|_____|__|  |_____|__|__| v1.0.0 by @TactiFail
-
-[+] The target 10.1.1.10 is in scope
-[!] The target 10.1.1.100 is explicitly excluded from the scope
-[+] The target 10.1.2.100 is in scope
-[!] The target 10.1.3.100 is explicitly excluded from the scope
-[+] The target 10.1.4.100 is in scope
-[+] The target 10.1.5.100 is in scope
-[+] The target 10.1.6.250 is in scope
-[-] The target 142.250.190.46 (google.com) is out of scope.
+[+] The target 10.1.1.10 is in scope, matching line: 10.1.1.0/24
+[X] The target 10.1.1.100 is explicitly excluded from the scope, matching line: 10.1.1.100
+[+] The target 10.1.2.100 is in scope, matching line: 10.1.2.0/24
+[X] The target 10.1.3.100 is explicitly excluded from the scope, matching line: 10.1.3.0/24
+[+] The target 10.1.4.100 is in scope, matching line: 10.1.4.0/24
+[+] The target 10.1.5.100 is in scope, matching line: 10.1.5.1-150
+[+] The target 10.1.6.250 is in scope, matching line: 10.1.6.250
+[-] The target 142.250.191.142 (google.com) is out of scope.
+[!] Skipping unresolvable target '1.1.1.1.1'
+[!] Skipping unresolvable target 'asdf'
+[!] Skipping unresolvable target 'asdffsad.fdsafasdfasffffqeqewfqwefqwef.com'
 ```
 </details>

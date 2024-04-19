@@ -23,6 +23,7 @@ def run_once(greppable_output, firewall, list_in, list_ex, list_out, list_not):
     # Main loop for each Target
     for target in TARGETS:
         if not target.valid:
+            print("[!] Skipping unresolvable target '{}'".format(target.hostname))
             continue
         target.state, target.source = check_target_scope(target.ip_address)
 
@@ -115,18 +116,18 @@ class Target:
         # Parse the target and set the appropriate variable
         self.parse_target(target)
 
-    def parse_target(self, s):
+    def parse_target(self, targetstring):
         # IPv4
         try:
-            ipaddress.IPv4Address(s)
-            self.ip_address = s
+            ipaddress.IPv4Address(targetstring)
+            self.ip_address = targetstring
             return
         except ipaddress.AddressValueError:
             pass
 
         # Hostname
-        self.hostname = s
-        self.ip_address = resolve_hostname(s)
+        self.hostname = targetstring
+        self.ip_address = resolve_hostname(targetstring)
         if self.ip_address is None:
             self.valid = False
         return
@@ -214,7 +215,8 @@ def resolve_hostname(hostname):
     try:
         return socket.gethostbyname(hostname)
     except socket.gaierror:
-        print(f"[!] Could not resolve '{hostname}'", file=sys.stderr)
+        if DEBUG:
+            print(f"[!] Could not resolve '{hostname}'", file=sys.stderr)
         return None
 
 
