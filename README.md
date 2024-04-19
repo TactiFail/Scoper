@@ -199,7 +199,7 @@ output:
 
 ## Examples
 
-All examples assume t he following scope, exclusion, and target files unless otherwise specified:
+All examples assume the following scope, exclusion, and target files unless otherwise specified:
 
 ```
 $ cat test/scope.txt
