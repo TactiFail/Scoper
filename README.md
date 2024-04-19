@@ -200,7 +200,7 @@ output:
 ## Examples
 <details>
 <summary>Click to expand/collapse</summary>
-All examples assume the following scope, exclusion, and target files:
+All examples assume the following scope, exclusion, and target files unless otherwise specified:
 
 ```
 $ cat test/scope.txt
