@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, ipaddress, socket, os, re, sys
+import argparse, ipaddress, readline, socket, os, re, sys
 from dotenv import load_dotenv
 
 # Global variables
@@ -17,7 +17,7 @@ SCOPE_FILE_PATH = os.getenv('SCOPE_FILE_PATH', 'scope.txt')
 EXCLUDE_FILE_PATH = os.getenv('EXCLUDE_FILE_PATH', 'exclude.txt')
 
 
-def run(greppable_output, firewall, list_in, list_ex, list_out, list_not):
+def run_once(greppable_output, firewall, list_in, list_ex, list_out, list_not):
     global SCOPE, TARGETS, EXCLUSIONS, VERBOSE
 
     # Main loop for each Target
@@ -67,6 +67,38 @@ def run(greppable_output, firewall, list_in, list_ex, list_out, list_not):
         generate_iptables_rules()
 
 
+def run_loop():
+    global SCOPE, EXCLUSIONS
+    print("Enter targets, one at a time")
+    try:
+        while True:
+            line = input("[>] ")
+            if line == "exit" or line == "quit":
+                print("Exiting...")
+                return
+            target = Target(line)
+            if not target.valid:
+                continue
+            target.state, target.source = check_target_scope(target.ip_address)
+            if target.state == "InScope":
+                print(f"[+] The target {target} is in scope", end='')
+                if VERBOSE:
+                    print(f", matching line: {target.source}")
+                else:
+                    print("")
+            elif target.state == "Excluded":
+                print(f"[X] The target {target} is explicitly excluded from the scope", end='')
+                if VERBOSE:
+                    print(f", matching line: {target.source}")
+                else:
+                    print("")
+            else:
+                print(f"[-] The target {target} is out of scope.")
+    except KeyboardInterrupt:
+        print("\nExiting...")
+        return
+
+
 class Target:
     def __init__(self, target):
         self.target = target
@@ -106,7 +138,7 @@ class Target:
             return f"{self.ip_address}"
 
 
-def load_lists(scope_file, target, exclude_file):
+def load_lists(scope_file, target=None, exclude_file=None):
     global SCOPE, TARGETS, EXCLUSIONS
 
     # Load scope
@@ -122,28 +154,29 @@ def load_lists(scope_file, target, exclude_file):
         exit(1)
 
     # Load targets
-    if DEBUG:
+    if DEBUG and target is not None:
         print(f"[@] Loading targets from {target}")
-    if os.path.isfile(target):
+    if target is not None and os.path.isfile(target):
         with open(target, 'r') as file:
             for line in file:
                 t = Target(line.strip())
                 TARGETS.append(t)
     elif target:
         TARGETS = [Target(target)]
-    if DEBUG:
+    if DEBUG and target is not None:
         print(f"[@] Loaded {len(TARGETS)} targets")
 
     # Load exclusions, if any
-    if DEBUG:
+    if DEBUG and exclude_file is not None:
         print(f"[@] Loading exclusions from {exclude_file}")
-    try:
-        with open(exclude_file, 'r') as file:
-            EXCLUSIONS = [line.strip() for line in file if line.strip()]
-        if DEBUG:
-            print(f"[@] Loaded {len(EXCLUSIONS)} exclusion entries\n")
-    except FileNotFoundError:
-        print(f"[!] Warning: Exclude file not found - will not check for exclusions\n", file=sys.stderr)
+    if exclude_file is not None and os.path.isfile(exclude_file):
+        try:
+            with open(exclude_file, 'r') as file:
+                EXCLUSIONS = [line.strip() for line in file if line.strip()]
+            if DEBUG:
+                print(f"[@] Loaded {len(EXCLUSIONS)} exclusion entries\n")
+        except FileNotFoundError:
+            print(f"[!] Warning: Exclude file not found - will not check for exclusions\n", file=sys.stderr)
 
 
 def check_target_scope(ip_address):
@@ -197,7 +230,7 @@ def banner():
     print(""" _____ _____ _____ _____ _____ _____ 
 |   __|     |     |  _  |   __| __  |
 |__   |   --|  +  |   __|   __|    -|
-|_____|_____|_____|__|  |_____|__|__| v1.0.0 by @TactiFail
+|_____|_____|_____|__|  |_____|__|__| v1.1.0 by @TactiFail
 """)
 
 
@@ -207,10 +240,11 @@ def main():
     parser = argparse.ArgumentParser(description='Check whether target machines are in scope. Optionally generate iptables rules if not.')
 
     # Main args
-    parser.add_argument('target', type=str, help='IP address, hostname, or a file containing targets to check')
+    parser.add_argument('target', nargs='?', type=str, help='IP address, hostname, or a file containing targets to check')
     parser.add_argument('-sf', '--scope-file', type=str, default=SCOPE_FILE_PATH, help='file containing a list of in-scope IP addresses or ranges')
     parser.add_argument('-ef', '--exclude-file', type=str, default=EXCLUDE_FILE_PATH, help='file containing a list of excluded IP addresses or ranges')
-    parser.add_argument('-v',  '--verbose', action='store_true', help='verbose output')
+    parser.add_argument('-i',  '--interactive', action='store_true', help='interactive mode')
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
 
     # Output args
     list_opts_group = parser.add_argument_group("output", "mutually exclusive, choose one or none")
@@ -225,17 +259,23 @@ def main():
 
     args = parser.parse_args()
 
+    if args.target is None and not args.interactive:
+        parser.print_help()
+        exit()
+
     VERBOSE = args.verbose
 
     # Only show banner in some cases
     if not args.greppable and not args.firewall and not args.list_in and not args.list_ex and not args.list_out and not args.list_not:
         banner()
 
-    # Load targets, scope, and exclusions (if any)
+    # Load scope, targets, and exclusions (if any)
     load_lists(args.scope_file, args.target, args.exclude_file)
 
-    run(args.greppable, args.firewall, args.list_in, args.list_ex, args.list_out, args.list_not)
-
+    if not args.interactive:
+        run_once(args.greppable, args.firewall, args.list_in, args.list_ex, args.list_out, args.list_not)
+    else:
+        run_loop()
 
 if __name__ == "__main__":
     main()
